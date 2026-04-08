@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yashika's URL Shortener</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #0f0f13;
+    color: #e8e6df;
+    min-height: 100vh;
+    padding: 2.5rem 1rem;
+  }
+  .container { max-width: 680px; margin: 0 auto; }
+
+  .hero { margin-bottom: 2rem; }
+  .hero h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
+  .hero h1 span { color: #7f77dd; }
+  .hero p { font-size: .9rem; color: #888; margin-top: .4rem; }
+
+  .card {
+    background: #1a1a22;
+    border: 1px solid #2a2a38;
+    border-radius: 14px;
+    padding: 1.4rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .card-title {
+    font-size: .72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #666;
+    margin-bottom: 1rem;
+  }
+
+  label { font-size: .82rem; color: #aaa; display: block; margin-bottom: .3rem; margin-top: .9rem; }
+  label:first-of-type { margin-top: 0; }
+
+  input {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: .9rem;
+    background: #0f0f13;
+    color: #e8e6df;
+    border: 1px solid #2a2a38;
+    border-radius: 8px;
+    outline: none;
+    transition: border .15s;
+  }
+  input:focus { border-color: #7f77dd; }
+  input::placeholder { color: #444; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  button.primary {
+    margin-top: 1.1rem;
+    width: 100%;
+    padding: 11px;
+    font-size: .9rem;
+    font-weight: 600;
+    background: #534ab7;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  button.primary:hover { background: #6b62d0; }
+  button.primary:active { background: #3e3690; }
+
+  #msg { font-size: .82rem; margin-top: .6rem; min-height: 1.1rem; }
+  #msg.ok { color: #5dcaa5; }
+  #msg.err { color: #f09595; }
+
+  .new-link-box {
+    background: #12121a;
+    border: 1px solid #2a2a38;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: .75rem;
+    display: none;
+  }
+  .new-link-box.show { display: block; }
+  .new-link-label { font-size: .75rem; color: #666; margin-bottom: 4px; }
+  .new-link-url { font-size: .9rem; font-family: monospace; color: #afa9ec; word-break: break-all; }
+  .new-link-copy {
+    margin-top: 8px;
+    padding: 6px 14px;
+    font-size: .8rem;
+    background: none;
+    color: #7f77dd;
+    border: 1px solid #534ab7;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background .1s;
+  }
+  .new-link-copy:hover { background: #1e1e30; }
+
+  .search {
+    width: 100%;
+    padding: 9px 12px;
+    font-size: .85rem;
+    background: #0f0f13;
+    color: #e8e6df;
+    border: 1px solid #2a2a38;
+    border-radius: 8px;
+    outline: none;
+    margin-bottom: 1rem;
+  }
+  .search:focus { border-color: #534ab7; }
+  .search::placeholder { color: #444; }
+
+  .stats-row { display: flex; gap: 10px; margin-bottom: 1rem; }
+  .stat { flex: 1; background: #12121a; border: 1px solid #2a2a38; border-radius: 8px; padding: 10px 14px; }
+  .stat-n { font-size: 1.4rem; font-weight: 700; color: #fff; }
+  .stat-l { font-size: .75rem; color: #666; margin-top: 2px; }
+
+  .link-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #12121a;
+    border: 1px solid #2a2a38;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    transition: border-color .15s;
+  }
+  .link-row:hover { border-color: #3a3a50; }
+
+  .link-info { flex: 1; min-width: 0; }
+  .link-name { font-size: .9rem; font-weight: 600; color: #e8e6df; margin-bottom: 3px; }
+  .link-short { font-size: .8rem; font-family: monospace; color: #9fa8f8; }
+  .link-short a { color: #9fa8f8; text-decoration: none; }
+  .link-short a:hover { text-decoration: underline; }
+  .link-orig { font-size: .75rem; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 340px; margin-top: 2px; }
+
+  .link-meta { text-align: right; }
+  .click-badge {
+    font-size: .72rem;
+    padding: 3px 9px;
+    background: #1e1e30;
+    color: #7f77dd;
+    border-radius: 99px;
+    margin-bottom: 6px;
+    display: inline-block;
+  }
+  .link-actions { display: flex; gap: 5px; justify-content: flex-end; }
+
+  .btn-copy {
+    font-size: .75rem;
+    padding: 5px 11px;
+    background: none;
+    color: #aaa;
+    border: 1px solid #2a2a38;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all .1s;
+  }
+  .btn-copy:hover { border-color: #534ab7; color: #afa9ec; }
+  .btn-copy.copied { color: #5dcaa5; border-color: #3b6d11; }
+
+  .btn-del {
+    font-size: .75rem;
+    padding: 5px 11px;
+    background: none;
+    color: #666;
+    border: 1px solid #2a2a38;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all .1s;
+  }
+  .btn-del:hover { color: #f09595; border-color: #a32d2d; }
+
+  .empty { text-align: center; color: #444; font-size: .9rem; padding: 2.5rem 0; }
+  .empty span { display: block; font-size: 2rem; margin-bottom: .5rem; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="hero">
+    <h1>Yashika's <span>URL Shortener</span></h1>
+    <p>Shorten any cloudflared tunnel URL instantly.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Shorten a URL</div>
+    <label>Cloudflared tunnel URL *</label>
+    <input id="target" type="text" placeholder="https://abc123.trycloudflare.com" />
+    <div class="row2">
+      <div>
+        <label>Short key (optional)</label>
+        <input id="key" type="text" placeholder="e.g. ag3  (auto if empty)" />
+      </div>
+      <div>
+        <label>Label (optional)</label>
+        <input id="label" type="text" placeholder="e.g. Experiment 3" />
+      </div>
+    </div>
+    <button class="primary" onclick="addLink()">Generate short link</button>
+    <div id="msg"></div>
+    <div class="new-link-box" id="newLinkBox">
+      <div class="new-link-label">Your short link is ready</div>
+      <div class="new-link-url" id="newLinkUrl"></div>
+      <button class="new-link-copy" onclick="copyNew()">Copy link</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-n" id="stat-total">0</div>
+        <div class="stat-l">Total links</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n" id="stat-clicks">0</div>
+        <div class="stat-l">Total clicks</div>
+      </div>
+    </div>
+    <input class="search" id="search" placeholder="Search links..." oninput="render()" />
+    <div id="list"></div>
+  </div>
+
+</div>
+
+<script>
+let links = {};
+let lastShort = "";
+
+async function load() {
+  const r = await fetch("/api/links");
+  links = await r.json();
+  render();
+}
+
+function render() {
+  const q = document.getElementById("search").value.toLowerCase();
+  const entries = Object.entries(links).filter(([k, v]) =>
+    !q || k.includes(q) || (v.label||"").toLowerCase().includes(q) || v.target.toLowerCase().includes(q)
+  );
+
+  // Stats
+  const totalClicks = Object.values(links).reduce((s, v) => s + (v.clicks||0), 0);
+  document.getElementById("stat-total").textContent = Object.keys(links).length;
+  document.getElementById("stat-clicks").textContent = totalClicks;
+
+  const el = document.getElementById("list");
+  if (!entries.length) {
+    el.innerHTML = '<div class="empty"><span>🔗</span>No links yet. Add one above.</div>';
+    return;
+  }
+
+  // Sort newest first
+  entries.sort((a, b) => new Date(b[1].created) - new Date(a[1].created));
+
+  el.innerHTML = entries.map(([key, v]) => `
+    <div class="link-row">
+      <div class="link-info">
+        <div class="link-name">${esc(v.label || key)}</div>
+        <div class="link-short"><a href="/${esc(key)}" target="_blank">/${esc(key)}</a></div>
+        <div class="link-orig" title="${esc(v.target)}">${esc(v.target)}</div>
+      </div>
+      <div class="link-meta">
+        <div class="click-badge">${v.clicks||0} click${v.clicks===1?'':'s'}</div>
+        <div class="link-actions">
+          <button class="btn-copy" id="copy-${esc(key)}" onclick="copyLink('${esc(key)}')">copy</button>
+          <button class="btn-del" onclick="del('${esc(key)}')">delete</button>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+async function addLink() {
+  const target = document.getElementById("target").value.trim();
+  const key    = document.getElementById("key").value.trim();
+  const label  = document.getElementById("label").value.trim();
+  const msg    = document.getElementById("msg");
+  const box    = document.getElementById("newLinkBox");
+  box.classList.remove("show");
+
+  if (!target) { msg.className="err"; msg.textContent="Paste a tunnel URL first."; return; }
+
+  const r = await fetch("/api/links", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key, target, label })
+  });
+  const data = await r.json();
+
+  if (data.error) { msg.className="err"; msg.textContent=data.error; return; }
+
+  msg.className="ok"; msg.textContent="Saved!";
+  lastShort = data.short;
+  document.getElementById("newLinkUrl").textContent = data.short;
+  box.classList.add("show");
+  document.getElementById("target").value = "";
+  document.getElementById("key").value = "";
+  document.getElementById("label").value = "";
+  load();
+}
+
+async function del(key) {
+  if (!confirm(`Delete /${key}?`)) return;
+  await fetch(`/api/links/${key}`, { method: "DELETE" });
+  load();
+}
+
+function copyLink(key) {
+  const host = location.origin;
+  navigator.clipboard.writeText(`${host}/${key}`);
+  const btn = document.getElementById(`copy-${key}`);
+  if (btn) { btn.textContent = "copied!"; btn.classList.add("copied"); setTimeout(() => { btn.textContent="copy"; btn.classList.remove("copied"); }, 1500); }
+}
+
+function copyNew() {
+  navigator.clipboard.writeText(lastShort);
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+load();
+</script>
+</body>
+</html>
